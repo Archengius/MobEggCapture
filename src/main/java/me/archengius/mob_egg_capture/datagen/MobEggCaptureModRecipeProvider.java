@@ -24,7 +24,7 @@ public class MobEggCaptureModRecipeProvider extends FabricRecipeProvider {
             @Override
             public void buildRecipes() {
 
-                ItemStackShapedRecipeBuilder.shaped(provider.lookupOrThrow(Registries.ITEM), RecipeCategory.MISC, MobEggCaptureMod.createMobCaptureEggItemStack())
+                ItemStackShapedRecipeBuilder.shaped(provider.lookupOrThrow(Registries.ITEM), RecipeCategory.MISC, MobEggCaptureMod.createMobCaptureEggItemStack(false))
                     .pattern("ggg")
                     .pattern("geg")
                     .pattern("ggg")

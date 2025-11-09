@@ -1,13 +1,16 @@
 package me.archengius.mob_egg_capture;
 
+import com.google.common.collect.Lists;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.fabricmc.fabric.api.loot.v3.LootTableSource;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -15,12 +18,15 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ThrownEgg;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.*;
@@ -30,8 +36,13 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MobEggCaptureMod implements ModInitializer {
-	public static final String MOD_ID = "mob_egg_capture";
+
+    public static final String MOD_ID = "mob_egg_capture";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+    private static final Component ITEM_NAME = Component.literal("Safari Net");
+    private static final Style DEFAULT_TOOLTIP_STYLE = Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(false);
+    private static final Component REUSABLE_ITEM_TOOLTIP = Component.literal("Reusable").withStyle(DEFAULT_TOOLTIP_STYLE);
 
 	@Override
 	public void onInitialize() {
@@ -40,17 +51,46 @@ public class MobEggCaptureMod implements ModInitializer {
         LootTableEvents.MODIFY.register(MobEggCaptureMod::handleLootTableModificationEvent);
 	}
 
-    public static ItemStack createMobCaptureEggItemStack() {
-        DataComponentPatch resultDataComponents = DataComponentPatch.builder()
-                .set(DataComponents.CUSTOM_DATA, MobEggCaptureComponents.makeMobCaptureProjectile())
-                .set(DataComponents.MAX_STACK_SIZE, 1)
-                .set(DataComponents.ITEM_NAME, Component.literal("Safari Net"))
-                .set(DataComponents.ITEM_MODEL, ResourceLocation.withDefaultNamespace("lead"))
-                .set(DataComponents.RARITY, Rarity.RARE)
-                .build();
+    public static ItemStack createMobCaptureEggItemStack(boolean isReusable) {
+        DataComponentPatch.Builder resultDataComponents = DataComponentPatch.builder()
+            .set(DataComponents.CUSTOM_DATA, MobEggCaptureComponents.makeMobCaptureProjectile(isReusable))
+            .set(DataComponents.MAX_STACK_SIZE, 1)
+            .set(DataComponents.ITEM_NAME, ITEM_NAME)
+            .set(DataComponents.ITEM_MODEL, ResourceLocation.withDefaultNamespace("lead"))
+            .set(DataComponents.RARITY, isReusable ? Rarity.EPIC : Rarity.RARE);
+
+        if (isReusable) {
+            resultDataComponents = resultDataComponents
+                    .set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true)
+                    .set(DataComponents.LORE, new ItemLore(Lists.newArrayList(REUSABLE_ITEM_TOOLTIP)));
+        }
 
         ItemStack resultItemStack = new ItemStack(Items.CLOCK, 1);
-        resultItemStack.applyComponents(resultDataComponents);
+        resultItemStack.applyComponents(resultDataComponents.build());
+        return resultItemStack;
+    }
+
+    public static ItemStack createCapturedMobItemStack(boolean isReusable, TypedEntityData<EntityType<?>> entityData) {
+        Component resultItemName = ITEM_NAME.copy().append(Component.literal(" ["))
+                .append(entityData.type().getDescription()).append(Component.literal("]"));
+
+        DataComponentPatch.Builder resultDataComponents = DataComponentPatch.builder()
+                .set(DataComponents.CUSTOM_DATA, MobEggCaptureComponents.makeCapturedMobEntity(isReusable))
+                .set(DataComponents.ENTITY_DATA, entityData)
+                .set(DataComponents.MAX_STACK_SIZE, 1)
+                .set(DataComponents.ITEM_NAME, resultItemName)
+                .set(DataComponents.ITEM_MODEL, ResourceLocation.withDefaultNamespace("brown_egg"))
+                .set(DataComponents.RARITY, isReusable ? Rarity.EPIC : Rarity.RARE);
+
+        if (isReusable) {
+            Style defaultTooltipStyle = Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(false);
+            resultDataComponents = resultDataComponents
+                    .set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true)
+                    .set(DataComponents.LORE, new ItemLore(Lists.newArrayList(REUSABLE_ITEM_TOOLTIP)));
+        }
+
+        ItemStack resultItemStack = new ItemStack(Items.CLOCK, 1);
+        resultItemStack.applyComponents(resultDataComponents.build());
         return resultItemStack;
     }
 
@@ -76,7 +116,7 @@ public class MobEggCaptureMod implements ModInitializer {
             AtomicInteger lootPoolIndexCounter = new AtomicInteger();
             tableBuilder.modifyPools(builder -> {
                 if (lootPoolIndexCounter.incrementAndGet() == 1) {
-                    builder.with(MobCaptureEggLootItem.mobCaptureEgg().setWeight(30).build());
+                    builder.with(MobCaptureEggLootItem.mobCaptureEgg(false).setWeight(30).build());
                 }
             });
         }
@@ -84,7 +124,7 @@ public class MobEggCaptureMod implements ModInitializer {
             AtomicInteger lootPoolIndexCounter = new AtomicInteger();
             tableBuilder.modifyPools(builder -> {
                 if (lootPoolIndexCounter.incrementAndGet() == 1) {
-                    builder.with(MobCaptureEggLootItem.mobCaptureEgg().setWeight(20).build());
+                    builder.with(MobCaptureEggLootItem.mobCaptureEgg(false).setWeight(20).build());
                 }
             });
         }
@@ -92,7 +132,7 @@ public class MobEggCaptureMod implements ModInitializer {
             AtomicInteger lootPoolIndexCounter = new AtomicInteger();
             tableBuilder.modifyPools(builder -> {
                 if (lootPoolIndexCounter.incrementAndGet() == 1) {
-                    builder.with(MobCaptureEggLootItem.mobCaptureEgg().setWeight(4).build());
+                    builder.with(MobCaptureEggLootItem.mobCaptureEgg(false).setWeight(4).build());
                 }
             });
         }
@@ -100,7 +140,15 @@ public class MobEggCaptureMod implements ModInitializer {
             AtomicInteger lootPoolIndexCounter = new AtomicInteger();
             tableBuilder.modifyPools(builder -> {
                 if (lootPoolIndexCounter.incrementAndGet() == 1) {
-                    builder.with(MobCaptureEggLootItem.mobCaptureEgg().setWeight(30).build());
+                    builder.with(MobCaptureEggLootItem.mobCaptureEgg(false).setWeight(30).build());
+                }
+            });
+        }
+        if (key.location().toString().equals("minecraft:chests/end_city_treasure") && source.isBuiltin()) {
+            AtomicInteger lootPoolIndexCounter = new AtomicInteger();
+            tableBuilder.modifyPools(builder -> {
+                if (lootPoolIndexCounter.incrementAndGet() == 1) {
+                    builder.with(MobCaptureEggLootItem.mobCaptureEgg(true).setWeight(3).build());
                 }
             });
         }

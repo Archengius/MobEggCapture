@@ -1,5 +1,6 @@
 package me.archengius.mob_egg_capture;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Registry;
@@ -16,13 +17,20 @@ import java.util.function.Consumer;
 
 public class MobCaptureEggLootItem extends LootPoolSingletonContainer {
 
-    public static final MapCodec<MobCaptureEggLootItem> CODEC = RecordCodecBuilder.<MobCaptureEggLootItem>mapCodec((instance) ->
-            singletonFields(instance).apply(instance, MobCaptureEggLootItem::new));;
+    public static final MapCodec<MobCaptureEggLootItem> CODEC = RecordCodecBuilder.mapCodec((instance) ->
+            instance.group(Codec.BOOL.optionalFieldOf("is_reusable", false).forGetter(MobCaptureEggLootItem::isReusable))
+                    .and(singletonFields(instance)).apply(instance, MobCaptureEggLootItem::new));;
     public static final LootPoolEntryType MOB_CAPTURE_EGG = Registry.register(BuiltInRegistries.LOOT_POOL_ENTRY_TYPE,
             ResourceLocation.fromNamespaceAndPath(MobEggCaptureMod.MOD_ID, "mob_capture_egg"), new LootPoolEntryType(CODEC));
+    private final boolean isReusable;
 
-    public MobCaptureEggLootItem(int weight, int quality, List<LootItemCondition> conditions, List<LootItemFunction> functions) {
+    public MobCaptureEggLootItem(boolean isReusable, int weight, int quality, List<LootItemCondition> conditions, List<LootItemFunction> functions) {
         super(weight, quality, conditions, functions);
+        this.isReusable = isReusable;
+    }
+
+    public boolean isReusable() {
+        return isReusable;
     }
 
     public static void register() {
@@ -30,7 +38,7 @@ public class MobCaptureEggLootItem extends LootPoolSingletonContainer {
 
     @Override
     protected void createItemStack(Consumer<ItemStack> consumer, LootContext lootContext) {
-        consumer.accept(MobEggCaptureMod.createMobCaptureEggItemStack());
+        consumer.accept(MobEggCaptureMod.createMobCaptureEggItemStack(isReusable));
     }
 
     @Override
@@ -38,7 +46,8 @@ public class MobCaptureEggLootItem extends LootPoolSingletonContainer {
         return MOB_CAPTURE_EGG;
     }
 
-    public static LootPoolSingletonContainer.Builder<?> mobCaptureEgg() {
-        return simpleBuilder((weight, quality, conditions, functions) -> new MobCaptureEggLootItem(weight, quality, conditions, functions));
+    public static LootPoolSingletonContainer.Builder<?> mobCaptureEgg(boolean isReusable) {
+        return simpleBuilder((weight, quality, conditions, functions) ->
+                new MobCaptureEggLootItem(isReusable, weight, quality, conditions, functions));
     }
 }

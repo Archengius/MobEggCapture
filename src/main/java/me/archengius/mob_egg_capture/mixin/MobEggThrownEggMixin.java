@@ -51,22 +51,11 @@ public class MobEggThrownEggMixin {
                         entitySavedCompoundTag = entitySavedData.buildResult();
                     }
                     TypedEntityData<EntityType<?>> resultEntityData = TypedEntityData.of(entity.getType(), entitySavedCompoundTag);
-                    Component resultItemName = Component.literal("Safari Net ").append(Component.literal("[")).append(entity.getType().getDescription()).append(Component.literal("]"));
                     entity.remove(Entity.RemovalReason.DISCARDED);
 
                     // Build an item stack with the captured entity and drop it on the floor
-                    DataComponentPatch resultDataComponents = DataComponentPatch.builder()
-                            .set(DataComponents.CUSTOM_DATA, MobEggCaptureComponents.makeCapturedMobEntity())
-                            .set(DataComponents.ENTITY_DATA, resultEntityData)
-                            .set(DataComponents.MAX_STACK_SIZE, 1)
-                            .set(DataComponents.ITEM_NAME, resultItemName)
-                            .set(DataComponents.ITEM_MODEL, ResourceLocation.withDefaultNamespace("brown_egg"))
-                            .set(DataComponents.RARITY, Rarity.RARE)
-                            .build();
-
-                    ItemStack capturedMobItemStack = new ItemStack(thisEntity.getItem().getItem(), 1);
-                    capturedMobItemStack.applyComponents(resultDataComponents);
-
+                    boolean isReusable = MobEggCaptureComponents.isReusable(thisEntity.getItem());
+                    ItemStack capturedMobItemStack = MobEggCaptureMod.createCapturedMobItemStack(isReusable, resultEntityData);
                     ItemEntity droppedItemEntity = new ItemEntity(thisEntity.level(), entity.getX(), entity.getY(), entity.getZ(), capturedMobItemStack);
                     droppedItemEntity.setPickUpDelay(20);
                     thisEntity.level().addFreshEntity(droppedItemEntity);
@@ -87,7 +76,7 @@ public class MobEggThrownEggMixin {
         if (MobEggCaptureComponents.isMobCaptureProjectile(thisEntity.getItem())) {
             if (!thisEntity.level().isClientSide() && !thisEntity.isRemoved()) {
 
-                // If we did not capture an entity, drop ourselves as an item
+                // If we did not capture an entity (or this item is reusable), drop ourselves as an item
                 if (projectileOwner == null || !projectileOwner.hasInfiniteMaterials()) {
                     ItemEntity droppedItemEntity = new ItemEntity(thisEntity.level(), thisEntity.getX(), thisEntity.getY(), thisEntity.getZ(), thisEntity.getItem());
                     droppedItemEntity.setPickUpDelay(20);
@@ -114,6 +103,7 @@ public class MobEggThrownEggMixin {
                         if (entity instanceof Mob mob) {
                             mob.yHeadRot = mob.getYRot();
                             mob.yBodyRot = mob.getYRot();
+                            mob.setPersistenceRequired();
                         }
 
                         if (entity.fudgePositionAfterSizeChange(EntityDimensions.fixed(0.0f, 0.0f))) {
@@ -122,6 +112,15 @@ public class MobEggThrownEggMixin {
                             serverLevel.addFreshEntityWithPassengers(entity);
                             if (entity instanceof Mob mob) {
                                 mob.playAmbientSound();
+                            }
+
+                            // If this item is reusable, drop the empty mob capture egg as an item
+                            boolean isReusable = MobEggCaptureComponents.isReusable(thisEntity.getItem());
+                            if (isReusable && (projectileOwner == null || !projectileOwner.hasInfiniteMaterials())) {
+                                ItemStack emptyCaptureEggItemStack = MobEggCaptureMod.createMobCaptureEggItemStack(true);
+                                ItemEntity droppedItemEntity = new ItemEntity(thisEntity.level(), thisEntity.getX(), thisEntity.getY(), thisEntity.getZ(), emptyCaptureEggItemStack);
+                                droppedItemEntity.setPickUpDelay(20);
+                                thisEntity.level().addFreshEntity(droppedItemEntity);
                             }
                         } else {
                             // We could not place the entity at the hit location, drop ourselves as an item
