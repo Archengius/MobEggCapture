@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "mob_capture_egg",
+  "key": {
+    "e": "#minecraft:eggs",
+    "g": "minecraft:gold_ingot"
+  },
+  "pattern": [
+    "ggg",
+    "geg",
+    "ggg"
+  ],
+  "result": {
+    "components": {
+      "minecraft:custom_data": {
+        "mob_capture_projectile": 1
+      },
+      "minecraft:item_model": "minecraft:lead",
+      "minecraft:item_name": "Safari Net",
+      "minecraft:max_stack_size": 1,
+      "minecraft:rarity": "rare"
+    },
+    "count": 1,
+    "id": "minecraft:clock"
+  }
+}
