@@ -14,6 +14,7 @@ Recipe for Safari Net:
 - Reusable Safari Nets can be found in End Cities. They are multi-use and do not require weakness to capture hostile mobs.
 - Dispensers can utilize Safari Nets similar to players.
 - Mobs cannot pick up Safari Nets (even when they can pick up equipment, like some Zombies)
+- Copper Golems sort Safari Nets based on the type of the mob inside of them
 
 ## Installation
 

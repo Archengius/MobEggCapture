@@ -5,7 +5,8 @@
   "mixins": [
     "DispenserBlockMixin",
     "MobEggThrownEggMixin",
-    "MobMixin"
+    "MobMixin",
+    "TransportItemsBetweenContainersMixin"
   ],
   "injectors": {
     "defaultRequire": 1
