@@ -1,14 +1,16 @@
 {
-	"required": true,
-	"package": "me.archengius.mob_egg_capture.mixin",
-	"compatibilityLevel": "JAVA_21",
-	"mixins": [
-      "MobEggThrownEggMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
-	},
-	"overwrites": {
-		"requireAnnotations": true
+  "required": true,
+  "package": "me.archengius.mob_egg_capture.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "DispenserBlockMixin",
+    "MobEggThrownEggMixin",
+    "MobMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
 	}
 }

@@ -34,9 +34,11 @@ public class MobEggThrownEggMixin {
         if (MobEggCaptureComponents.isMobCaptureProjectile(thisEntity.getItem())) {
             Entity entity = entityHitResult.getEntity();
             if (!entity.level().isClientSide()) {
-                // We can only capture mobs. Enemies must be affected by weakness status effect to be captured
+                boolean isReusable = MobEggCaptureComponents.isReusable(thisEntity.getItem());
+
+                // We can only capture mobs. Enemies must be affected by weakness status effect to be captured (unless this is a reusable Safari Net)
                 // Note that canUsePortal check is supposed to exclude boss mobs. This seems to be the easiest way to check for an enemy that should not be captured/cannot travel
-                if (entity instanceof Mob mob && (!(mob instanceof Enemy) || mob.hasEffect(MobEffects.WEAKNESS)) && mob.canUsePortal(true)) {
+                if (entity instanceof Mob mob && (isReusable || !(mob instanceof Enemy) || mob.hasEffect(MobEffects.WEAKNESS)) && mob.canUsePortal(true)) {
 
                     // Remove weakness effect from enemies when capturing them into the egg
                     if (mob instanceof Enemy) {
@@ -54,7 +56,6 @@ public class MobEggThrownEggMixin {
                     entity.remove(Entity.RemovalReason.DISCARDED);
 
                     // Build an item stack with the captured entity and drop it on the floor
-                    boolean isReusable = MobEggCaptureComponents.isReusable(thisEntity.getItem());
                     ItemStack capturedMobItemStack = MobEggCaptureMod.createCapturedMobItemStack(isReusable, resultEntityData);
                     ItemEntity droppedItemEntity = new ItemEntity(thisEntity.level(), entity.getX(), entity.getY(), entity.getZ(), capturedMobItemStack);
                     droppedItemEntity.setPickUpDelay(20);

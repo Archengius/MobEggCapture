@@ -83,7 +83,6 @@ public class MobEggCaptureMod implements ModInitializer {
                 .set(DataComponents.RARITY, isReusable ? Rarity.EPIC : Rarity.RARE);
 
         if (isReusable) {
-            Style defaultTooltipStyle = Style.EMPTY.withColor(ChatFormatting.GRAY).withItalic(false);
             resultDataComponents = resultDataComponents
                     .set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true)
                     .set(DataComponents.LORE, new ItemLore(Lists.newArrayList(REUSABLE_ITEM_TOOLTIP)));
@@ -148,7 +147,7 @@ public class MobEggCaptureMod implements ModInitializer {
             AtomicInteger lootPoolIndexCounter = new AtomicInteger();
             tableBuilder.modifyPools(builder -> {
                 if (lootPoolIndexCounter.incrementAndGet() == 1) {
-                    builder.with(MobCaptureEggLootItem.mobCaptureEgg(true).setWeight(3).build());
+                    builder.with(MobCaptureEggLootItem.mobCaptureEgg(true).setWeight(5).build());
                 }
             });
         }
